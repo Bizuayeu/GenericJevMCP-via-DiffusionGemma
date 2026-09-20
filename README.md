@@ -161,6 +161,10 @@ For Antigravity, register this server, copy [skills/jev](skills/jev) to ~/.gemin
 
 ## Probability calibration and abstention
 
+The fixed display adds two separate lines before timing: `confidence` and `entropy` (nats), identified by question ID for multiple questions. Structured `metrics[question_id]` contains `confidence = max(p)` and `entropy_nats = -sum(p * ln(p))`, computed from the final averaged candidate distribution; abstentions are null. This entropy is not the average of per-read entropies in diagnostics. Higher entropy means a more diffuse distribution, with maximum ln(number of candidates); values across different candidate counts are not directly on a common scale. No extra model call is needed.
+
+At equal confidence, spreading the remaining probability across more candidates increases entropy: [0.55, 0.45, 0, 0, 0, 0] gives 0.688139 nats; [0.55, 0.09, 0.09, 0.09, 0.09, 0.09] gives 1.412386 nats. Entropy is whole-distribution uncertainty, not merely runner-up closeness or semantic similarity. For binary yes/no it is determined by confidence; with three or more candidates it also reveals how the remaining mass is distributed. These metrics concern the supplied candidates, not the full vocabulary.
+
 Probabilities are **uncalibrated and normalized within the supplied candidates**, not probabilities of factual correctness. A missing best answer can still yield a confident selection. Diagnostics expose label mass, label entropy, whether the vocabulary argmax is a permitted label, and read count. If every read's argmax falls outside the labels, the answer is null.
 
 With sources_only:true, an extra evidence-sufficiency decision nulls unsupported answers. That gate is itself a model judgment. Explicit retrieval with no match abstains without inference.

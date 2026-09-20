@@ -161,6 +161,10 @@ AntigravityではMCPを登録し、[skills/jev](skills/jev)を ~/.gemini/antigra
 
 ## 確率・保留・校正
 
+固定表示では時間の直前に `confidence` と `entropy`（nats）を別行で表示し、複数問は質問IDを併記します。構造化値は `metrics[質問ID]` に格納。confidenceは最終候補確率の最大値、entropy_natsは最終的に平均された候補分布から計算する `-Σ p ln(p)` で、diagnosticsにあるread別entropyの平均とは異なります。保留はnullです。entropyは大きいほど分布が曖昧で、最大値はln(候補数)なので候補数の異なる値を同じ尺度で比較しません。追加のモデル呼び出しはありません。
+
+同じconfidenceでも、残りの確率を多くの候補へ分散させるほどentropyは増えます。[0.55, 0.45, 0, 0, 0, 0]は0.688139 nats、[0.55, 0.09, 0.09, 0.09, 0.09, 0.09]は1.412386 natsです。entropyは分布全体の不確実さで、2位との接戦度や意味的類似度そのものではありません。yes/noの2択ではconfidenceから決まりますが、3択以上では残りの分布の違いも表します。対象は指定候補であり、モデルの全語彙ではありません。
+
 確率は**指定された候補内で正規化した未校正の確率**であり、事実としての正答率ではありません。適切な答えが候補にない場合も、高確率の選択が出ることがあります。diagnosticsにはlabel mass、label entropy、語彙全体のargmaxが候補labelかどうか、read数を返します。全readでargmaxがlabel外なら、その回答はnullです。
 
 sources_only:trueでは根拠十分性の追加判定を行い、不足時は回答をnullにします。このゲート自体もモデル判断です。検索を明示して一致がなかった場合は推論せず保留します。

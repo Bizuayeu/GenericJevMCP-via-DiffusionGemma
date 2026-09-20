@@ -31,5 +31,9 @@ try {
   assert.equal(typeof result.structuredContent.timing.total_seconds,'number');
   assert.equal(typeof result.structuredContent.timing.decision_seconds,'number');
   assert.match(output,/判定時間:/);
+  assert.match(output,/confidence:/);
+  assert.match(output,/entropy:/);
+  assert.equal(typeof result.structuredContent.metrics.color.confidence,'number');
+  assert.equal(typeof result.structuredContent.metrics.color.entropy_nats,'number');
   console.log(output);
 } finally {await client.close();}

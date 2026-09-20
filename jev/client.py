@@ -1,6 +1,7 @@
 """Call the stack locally, or through authenticated SSH without exporting API keys."""
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -24,6 +25,18 @@ def receive(payload):
                 headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'})
     with urlopen(req,timeout=180) as response:
         return json.load(response)
+
+def decision_metrics(value):
+    """Summarize final averaged candidate distributions, not per-read entropies."""
+    metrics={}
+    for qid,answer in value['answers'].items():
+        if answer is None:
+            metrics[qid]=None
+            continue
+        probabilities=list(answer['probabilities'].values())
+        metrics[qid]={'confidence':max(probabilities),
+                      'entropy_nats':sum(-p*math.log(p) for p in probabilities if p>0)}
+    return metrics
 
 def render_decision(value):
     """Present API values without another model call or probabilistic rewriting."""
@@ -49,6 +62,15 @@ def render_decision(value):
         lines.append('参照: '+source.get('source_url',source.get('title',source.get('id',''))))
     for source in value.get('input_sources',[]):
         lines.append('参照: '+source)
+    metrics=value.get('metrics')
+    if metrics is None:
+        metrics=decision_metrics(value)
+    for label,key,unit in [('confidence','confidence',''),('entropy','entropy_nats',' nats')]:
+        parts=[]
+        for qid,metric in metrics.items():
+            formatted='保留' if metric is None else f'{metric[key]:.6f}'
+            parts.append((qid+'=' if len(metrics)>1 else '')+formatted)
+        lines.append(label+': '+(' / '.join(parts) if parts else '未計測')+unit)
     lines.append(f"所要時間（全体）: {value['elapsed_seconds']:.3f} 秒")
     inference=value.get('diagnostics',{}).get('elapsed_seconds')
     if inference is not None:
@@ -166,6 +188,7 @@ def main():
             value['input_sources']=[str(path.resolve()) for path in a.state_file]
         value['timing']={'total_seconds':value['elapsed_seconds'],
                          'decision_seconds':value.get('diagnostics',{}).get('elapsed_seconds')}
+        value['metrics']=decision_metrics(value)
         value['display']=render_decision(value)
         if a.format=='text':
             print(value['display'])

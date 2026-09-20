@@ -170,3 +170,34 @@ class ClientTests(unittest.TestCase):
         self.assertIn('complexity: 0.106',display)
         value['diagnostics']={'reads':0}
         self.assertIn('判定時間: 未計測',client.render_decision(value))
+
+    def test_confidence_and_entropy_use_final_distribution_before_timing(self):
+        value={'answers':{'q':{'type':'choice','choice':'a','probabilities':{'a':.75,'b':.25}}},
+               'elapsed_seconds':1.,'diagnostics':{'elapsed_seconds':.1}}
+        metrics=client.decision_metrics(value)
+        self.assertEqual(metrics['q']['confidence'],.75)
+        self.assertAlmostEqual(metrics['q']['entropy_nats'],.5623351446188083)
+        text=client.render_decision(value)
+        self.assertIn('confidence: 0.750000',text)
+        self.assertIn('entropy: 0.562335 nats',text)
+        self.assertLess(text.index('confidence:'),text.index('entropy:'))
+        self.assertLess(text.index('entropy:'),text.index('所要時間（全体）:'))
+
+    def test_metrics_keep_question_identity_and_abstention(self):
+        value={'answers':{'certain':{'type':'noul','noul':1.,'probabilities':{'yes':1.,'no':0.}},
+                          'missing':None},'elapsed_seconds':1.}
+        metrics=client.decision_metrics(value)
+        self.assertEqual(metrics['certain'],{'confidence':1.,'entropy_nats':0.})
+        self.assertIsNone(metrics['missing'])
+        text=client.render_decision(value)
+        self.assertIn('confidence: certain=1.000000 / missing=保留',text)
+        self.assertIn('entropy: certain=0.000000 / missing=保留 nats',text)
+
+    def test_spreading_tail_increases_entropy_at_equal_confidence(self):
+        concentrated={'type':'choice','probabilities':dict(enumerate([.55,.45,0,0,0,0]))}
+        spread={'type':'choice','probabilities':dict(enumerate([.55,.09,.09,.09,.09,.09]))}
+        metrics=client.decision_metrics({'answers':{'a':concentrated,'b':spread}})
+        self.assertEqual(metrics['a']['confidence'],metrics['b']['confidence'])
+        self.assertAlmostEqual(metrics['a']['entropy_nats'],.6881388137135884)
+        self.assertAlmostEqual(metrics['b']['entropy_nats'],1.4123858743089333)
+        self.assertGreater(metrics['b']['entropy_nats'],metrics['a']['entropy_nats'])

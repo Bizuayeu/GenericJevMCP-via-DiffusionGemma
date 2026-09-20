@@ -81,3 +81,7 @@ Python modules are under jev/, operational scripts under scripts/, and live prob
 ## Structured result presentation / 結果表示の構造化
 
 The client supplies timing.total_seconds, timing.decision_seconds (null if unmeasured), and canonical display. MCP publishes outputSchema and structuredContent, with the display in a text code block. A complexity-named question is covered separately from both timing labels. CPU tests: 49 passed; MCP boundary/result tests: 3 passed. In a real gemma-nvfp4 headless /jev call, the final reply relayed only the block, preserving separate total 1.302 s and decision 0.097 s lines. This observed host behavior is not a guarantee against rewriting by arbitrary calling models.
+
+## Confidence and entropy display / 指標の表示
+
+The final averaged candidate distribution supplies per-question confidence=max(p) and Shannon entropy in nats; abstention metrics remain null. A same-confidence regression verifies that spreading tail mass increases entropy. Python tests: 52 passed; MCP tests: 3 passed. A live gemma-nvfp4 /jev reply preserved separate confidence (0.984146), entropy (0.081433 nats), total time (0.887 s), and decision time (0.389 s) lines. No additional inference is used to compute these metrics. Definitions and interpretation remain in MCP metadata and README, not repeated result disclaimers.

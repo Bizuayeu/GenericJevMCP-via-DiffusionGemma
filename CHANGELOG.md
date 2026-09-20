@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Display per-question confidence and final-distribution entropy on separate lines before timing; expose the same values as structured metrics.
+
 - Return typed total/decision timing and canonical display in MCP structuredContent/outputSchema; keep timing labels separate from question IDs.
 
 - Group Python modules under jev/, operations under scripts/, and live probes under tests/live/. Use python -m jev.client and python -m jev.calibration from the repository root. MCP tool names and configuration/data locations are unchanged; upgrade the remote checkout together with the client.
