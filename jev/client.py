@@ -8,7 +8,7 @@ import sys
 import time
 from urllib.request import Request,urlopen
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[1]
 
 def receive(payload):
     env=dict(line.split('=',1) for line in (ROOT/'.env').read_text().splitlines() if '=' in line and not line.startswith('#'))
@@ -93,8 +93,8 @@ def main():
     elif a.request is not None or a.request_json is not None:
         if any(value is not None for value in (a.number,a.query,a.choices,a.state)):
             p.error('--request cannot be combined with --number, --query, --choices or --state')
-        from decision import validate
-        from server import strict_pairs
+        from .decision import validate
+        from .server import strict_pairs
         def invalid_constant(value):
             raise ValueError('Non-finite JSON number')
         try:
@@ -117,7 +117,7 @@ def main():
             payload['body']['questions']['answer']={
                 'type':'choice','instructions':a.question,
                 'criteria':{name:None for name in a.choices}}
-        from decision import validate
+        from .decision import validate
         try:
             validate(payload['body'])
         except (ValueError,TypeError) as error:
@@ -137,7 +137,7 @@ def main():
         except (OSError,ValueError,TypeError) as error:
             p.error('Invalid state file: '+str(error))
     if a.command=='decide' and a.image is not None:
-        from media import encode_image, MAX_IMAGE_BYTES
+        from .media import encode_image, MAX_IMAGE_BYTES
         if 'image' in payload['body']:
             p.error('image specified both in request and --image')
         try:
@@ -150,7 +150,7 @@ def main():
         if not re.fullmatch(r'[\w.-]+',a.ssh_host) or not re.fullmatch(r'/[\w/.-]+',a.remote_root):
             p.error('Invalid SSH host or remote root')
         args=['ssh','-F',str(a.ssh_config),'-o','BatchMode=yes','-o','ConnectTimeout=10',
-              a.ssh_host,'python3 '+a.remote_root+'/client.py receive']
+              a.ssh_host,'cd '+a.remote_root+' && python3 -m jev.client receive']
         result=subprocess.run(args,input=json.dumps(payload,ensure_ascii=False).encode(),
                               stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=200)
         if result.returncode:

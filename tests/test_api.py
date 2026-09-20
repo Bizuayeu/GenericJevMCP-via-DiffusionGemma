@@ -4,8 +4,8 @@ import json
 from urllib.error import HTTPError
 from urllib.request import Request,urlopen
 from http.server import ThreadingHTTPServer
-from server import execute,make_handler
-from corpus import Corpus
+from jev.server import execute,make_handler
+from jev.corpus import Corpus
 
 class Fake:
     upstream='http://127.0.0.1:1'

@@ -12,9 +12,9 @@ import time
 from urllib.error import URLError
 from urllib.request import urlopen
 
-from corpus import Corpus
-from decision import Engine, validate
-from media import BODY_LIMIT
+from .corpus import Corpus
+from .decision import Engine, validate
+from .media import BODY_LIMIT
 
 RATE_PER_MINUTE=600  # Initial local ceiling; revisit against measured production traffic.
 

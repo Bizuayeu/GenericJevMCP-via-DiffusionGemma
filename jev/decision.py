@@ -5,7 +5,7 @@ import random
 import re
 import time
 from urllib.request import Request, urlopen
-from media import validate_image
+from .media import validate_image
 
 MAX_QUESTIONS = 16  # Initial API contract, well within the 256-row serving canvas.
 MAX_SAMPLES = 32  # Same ceiling as the upstream fixed-sample API.

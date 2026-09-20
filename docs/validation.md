@@ -71,3 +71,9 @@ The publication preparation adds a standalone MCP package, explicit SSH configur
 Standalone MCP publication probe: initialize → tools/list → tools/call returned all three types successfully against the existing GPU API (client 1.240 s / engine 0.126 s). No GPU restart or rebuild was performed.
 
 Clean exported checkout: Python CPU suite 46/46 passed using the declared dependency and pinned tokenizer fixture; npm ci from package-lock.json and both MCP boundary tests passed. No .env, client-config.json, private corpus or source-tree node_modules was present in that checkout. Local Markdown links and private machine-path checks passed.
+
+## Package layout refactor / ディレクトリ整理
+
+Python modules are under jev/, operational scripts under scripts/, and live probes under tests/live/. Python CPU checks: 48 passed; MCP boundary tests: 2 passed. The standalone MCP smoke probe was launched from outside the checkout and returned all three types through the new remote module command (client 1.235 s / decision 0.086 s). The existing GPU services were not restarted. Container command construction is covered by a CPU test; a fresh Docker deployment was not repeated.
+
+設定・データのルート位置を保持し、MCP側が作業ディレクトリを指定する。クライアントとSSH受信側は同じ配置版を使う。稼働済みサービスの全体再配備とは区別する。

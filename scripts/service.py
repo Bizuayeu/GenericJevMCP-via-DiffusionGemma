@@ -7,7 +7,7 @@ from pathlib import Path
 import secrets
 import subprocess
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[1]
 STATE=ROOT/'state'
 IMAGE=os.environ.get('JEV_IMAGE','sha256:b3a86ba00fb26aac2807a49ad8d60377373e2725d76f52dc1d6b0bf30c47a5a0')
 BACKEND='vllm-diffusiongemma'
@@ -51,7 +51,7 @@ def start(kind):
     name=BACKEND if kind=='backend' else ADAPTER
     corpus=ROOT/'corpus/surei.jsonl'
     source_hash=hashlib.sha256(b''.join((ROOT/f).read_bytes() for f in
-        (['service.py','models.lock.json'] if kind=='backend' else ['server.py','decision.py','media.py','corpus.py']+(['corpus/surei.jsonl'] if corpus.exists() else [])))).hexdigest()
+        (['scripts/service.py','models.lock.json'] if kind=='backend' else ['jev/server.py','jev/decision.py','jev/media.py','jev/corpus.py']+(['corpus/surei.jsonl'] if corpus.exists() else [])))).hexdigest()
     identity=hashlib.sha256(json.dumps([IMAGE,model,kind,source_hash]).encode()).hexdigest()
     exists=name in run('docker','ps','-a','--format','{{.Names}}').splitlines()
     if exists:
@@ -84,7 +84,7 @@ def start(kind):
                  '--network','host','--memory','1g','--memory-swap','1g',
                  '--env-file',str(ROOT/'.env'),'-e','NVIDIA_VISIBLE_DEVICES=void',
                  '-v',str(ROOT)+':/app:ro','-v',str(cache)+':/hf:ro',
-                 '--entrypoint','python3',IMAGE,'/app/server.py','--tokenizer',model+'/tokenizer.json',
+                 '--workdir','/app','--entrypoint','python3',IMAGE,'-m','jev.server','--tokenizer',model+'/tokenizer.json',
                  *(['--corpus','/app/corpus/surei.jsonl'] if corpus.exists() else [])]
     print(run(*command))
 

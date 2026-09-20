@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[1]
 
 def verify_snapshot(snapshot, lock):
     snapshot=Path(snapshot).absolute()
@@ -33,7 +33,7 @@ def main():
     state=ROOT/'state'
     state.mkdir(exist_ok=True)
     (state/'download-status.json').write_text(json.dumps(value,indent=2)+'\n',encoding='utf-8')
-    print('Verified pinned snapshot; run service.py init --download-status state/download-status.json')
+    print('Verified pinned snapshot; run scripts/service.py init --download-status state/download-status.json')
 
 if __name__=='__main__':
     main()

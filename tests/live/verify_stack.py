@@ -8,7 +8,7 @@ import sys
 from urllib.request import Request,urlopen
 from urllib.error import HTTPError
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[2]
 def keys(root):
     return dict(line.split('=',1) for line in (root/'.env').read_text().splitlines() if '=' in line)
 gemma_key=keys(ROOT.parent/'gemma-nvfp4')['VLLM_API_KEY']

@@ -1,6 +1,6 @@
 import math
 import unittest
-from calibration import TemperatureScaler, metrics, evaluate
+from jev.calibration import TemperatureScaler, metrics, evaluate
 
 
 class CalibrationTests(unittest.TestCase):

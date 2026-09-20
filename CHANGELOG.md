@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Group Python modules under jev/, operations under scripts/, and live probes under tests/live/. Use python -m jev.client and python -m jev.calibration from the repository root. MCP tool names and configuration/data locations are unchanged; upgrade the remote checkout together with the client.
+
 ## 0.1.0
 
 Initial public release.

@@ -8,13 +8,13 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-import client
+from jev import client
 
 
 class ClientTests(unittest.TestCase):
     def call(self, args):
         with patch.object(sys, 'argv', ['client.py', '--ssh-config', 'ssh_config', *args]), \
-                patch('client.subprocess.run', return_value=subprocess.CompletedProcess([], 0, b'{}', b'')) as run, \
+                patch('jev.client.subprocess.run', return_value=subprocess.CompletedProcess([], 0, b'{}', b'')) as run, \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             client.main()
             return json.loads(run.call_args.kwargs['input'])
@@ -65,12 +65,12 @@ class ClientTests(unittest.TestCase):
             (root/'client-config.json').write_text(json.dumps({'ssh_config':'my-config','ssh_host':'my-spark','remote_root':'/opt/jev'}),encoding='utf-8')
             with patch.object(client,'ROOT',root), \
                  patch.object(sys,'argv',['client.py','decide','--question','q']), \
-                 patch('client.subprocess.run',return_value=subprocess.CompletedProcess([],0,b'{}',b'')) as run, \
+                 patch('jev.client.subprocess.run',return_value=subprocess.CompletedProcess([],0,b'{}',b'')) as run, \
                  contextlib.redirect_stdout(io.StringIO()):
                 client.main()
             self.assertEqual(run.call_args.args[0][1:3],['-F','my-config'])
             self.assertIn('my-spark',run.call_args.args[0])
-            self.assertEqual(run.call_args.args[0][-1],'python3 /opt/jev/client.py receive')
+            self.assertEqual(run.call_args.args[0][-1],'cd /opt/jev && python3 -m jev.client receive')
 
     def test_choice_question_runs_without_request_file(self):
         payload=self.call(['decide','--question','日本の首都はどれですか','--choices','東京','大阪','京都'])
@@ -110,9 +110,9 @@ class ClientTests(unittest.TestCase):
                  patch.object(client, 'ROOT', Path('/unconfigured-jev-test')), \
                  patch.object(sys, 'argv', ['client.py', *(['--ssh-config','config'] if transport=='ssh' else []),
                                            'decide','--question','q']), \
-                 patch('client.time.monotonic', side_effect=[10,12.5]), \
-                 patch('client.receive', return_value=dict(result)), \
-                 patch('client.subprocess.run', return_value=subprocess.CompletedProcess([],0,json.dumps(result).encode(),b'')), \
+                 patch('jev.client.time.monotonic', side_effect=[10,12.5]), \
+                 patch('jev.client.receive', return_value=dict(result)), \
+                 patch('jev.client.subprocess.run', return_value=subprocess.CompletedProcess([],0,json.dumps(result).encode(),b'')), \
                  contextlib.redirect_stdout(io.StringIO()) as output:
                 client.main()
                 value=json.loads(output.getvalue())
@@ -146,7 +146,7 @@ class ClientTests(unittest.TestCase):
             path.write_text('source text',encoding='utf-8')
             with patch.object(sys,'argv',['client.py','--ssh-config','config','decide',
                                          '--question','q','--state-file',str(path),'--format','text']), \
-                 patch('client.subprocess.run',return_value=subprocess.CompletedProcess([],0,json.dumps(result).encode(),b'')), \
+                 patch('jev.client.subprocess.run',return_value=subprocess.CompletedProcess([],0,json.dumps(result).encode(),b'')), \
                  contextlib.redirect_stdout(io.StringIO()) as output:
                 client.main()
             self.assertIn(str(path.resolve()),output.getvalue())

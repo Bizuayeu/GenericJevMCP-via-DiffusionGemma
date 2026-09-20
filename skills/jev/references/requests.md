@@ -12,4 +12,4 @@
 {"request":{"questions":{"color":{"type":"choice","instructions":"画像の図形は何色ですか","criteria":{"赤":null,"青":null,"緑":null}},"shape":{"type":"choice","instructions":"画像の図形は何ですか","criteria":{"三角":null,"円":null,"四角":null}}}},"image":"C:/path/to/image.png"}
 ```
 
-ターミナルから直接使う場合は[本体README](../../../README.md)のclient.pyを使える。/jevの通常実行はMCP一回で行う。
+ターミナルから直接使う場合は[本体README](../../../README.md)の `python -m jev.client` を使える。/jevの通常実行はMCP一回で行う。

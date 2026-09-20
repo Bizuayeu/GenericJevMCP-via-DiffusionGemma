@@ -6,7 +6,7 @@ import {StdioClientTransport} from '@modelcontextprotocol/sdk/client/stdio.js';
 const client=new Client({name:'jev-smoke',version:'0.1.0'});
 const transport=new StdioClientTransport({
   command:process.execPath,
-  args:[fileURLToPath(new URL('./server.mjs',import.meta.url))],
+  args:[fileURLToPath(new URL('../../mcp/server.mjs',import.meta.url))],
   env:Object.fromEntries(Object.entries(process.env).filter(([,v])=>v!==undefined)),
   stderr:'inherit',
 });

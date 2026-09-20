@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import time
 from urllib.request import Request,urlopen
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[2]
 key=dict(l.split('=',1) for l in (ROOT/'.env').read_text().splitlines() if '=' in l)['DG_BERT_API_KEY']
 cases=[
  ('sun-1',1,'星導は太陽ですか。',True),

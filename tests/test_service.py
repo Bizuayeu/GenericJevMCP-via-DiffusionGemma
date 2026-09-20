@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-import service
+from scripts import service
 
 class ServiceTests(unittest.TestCase):
     def test_adapter_starts_without_private_corpus(self):
@@ -13,11 +13,14 @@ class ServiceTests(unittest.TestCase):
             state.mkdir()
             snapshot=str(Path.home()/'.cache/huggingface/hub/model/snapshots/revision')
             (state/'download-status.json').write_text(json.dumps({'models':{'diffusion':{'snapshot':snapshot}}}))
+            (root/'jev').mkdir()
             for name in ['server.py','decision.py','media.py','corpus.py']:
-                (root/name).write_text('# fixture')
+                (root/'jev'/name).write_text('# fixture')
             with patch.object(service,'ROOT',root),patch.object(service,'STATE',state), \
-                 patch('service.run',side_effect=['','container']) as run:
+                 patch('scripts.service.run',side_effect=['','container']) as run:
                 service.start('adapter')
             args=run.call_args.args
             self.assertNotIn('--corpus',args)
+            self.assertEqual(args[args.index('--workdir')+1],'/app')
+            self.assertEqual(args[args.index('--entrypoint')+3:args.index('--entrypoint')+5],('-m','jev.server'))
             self.assertIn('NVIDIA_VISIBLE_DEVICES=void',args)

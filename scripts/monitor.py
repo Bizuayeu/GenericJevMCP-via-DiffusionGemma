@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import time
 
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parents[1]
 STATE=ROOT/'state'
 STATE.mkdir(exist_ok=True)
 names=['vllm-gemma26-nvfp4','vllm-diffusiongemma']

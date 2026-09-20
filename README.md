@@ -16,6 +16,23 @@ MCP host / terminal → Python client → optional SSH → CPU adapter :8011
 
 Text, optional evidence, or one image can be evaluated with multiple questions in a joint read or with isolated sequential questions. Ordinary generation on port 8010 and decisions share the same loaded weights. Decisions use one diffusion step per read; ordinary generation uses the denoising schedule.
 
+## Repository layout
+
+```text
+.
+├── jev/             Python API, decision logic, CLI, calibration
+├── mcp/             MCP stdio server
+├── scripts/         Model preparation, service lifecycle, monitoring
+├── tests/           CPU and MCP tests
+│   └── live/        Opt-in checks against a running GPU service
+├── runtime/         Pinned vLLM overlay and build-time checks
+├── examples/        Request examples
+├── skills/          Optional assistant skill
+└── docs/            Validation scope
+```
+
+Run Python entry points from the repository root: `python -m jev.client`, `python -m jev.calibration`, and `python scripts/service.py`. MCP sets its Python working directory to this root. Local `.env`, `client-config.json`, `state/` and `corpus/` remain at the root and stay untracked.
+
 ## Requirements
 
 | Component | Required environment / tested scope |
@@ -40,17 +57,17 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 
-python prepare_model.py --download
+python scripts/prepare_model.py --download
 # Or verify an existing snapshot:
-# python prepare_model.py --snapshot /absolute/cache/path/snapshots/REVISION
-python service.py init --download-status state/download-status.json
+# python scripts/prepare_model.py --snapshot /absolute/cache/path/snapshots/REVISION
+python scripts/service.py init --download-status state/download-status.json
 
 docker build -t generic-jev:local .
 export JEV_IMAGE=$(docker image inspect generic-jev:local --format '{{.Id}}')
-python service.py start-backend
+python scripts/service.py start-backend
 # Wait until ready; first compilation can take longer than warm inference.
 curl --fail http://127.0.0.1:8010/health
-python service.py start-adapter
+python scripts/service.py start-adapter
 curl --fail http://127.0.0.1:8011/health
 ```
 
@@ -58,14 +75,14 @@ The preparation command downloads the pinned revision under ~/.cache/huggingface
 
 Keep **JEV_IMAGE** set to your built image ID for service operations and monitoring. The source default is the original tested image ID, not an image already present on your machine. The build verifies the pinned base and overlay hashes.
 
-Optionally run `python monitor.py` in another terminal with the same JEV_IMAGE. It stops matching managed GPU containers when host memory falls below the configured reserve; it is not an all-allocation OOM guarantee. Neither services nor monitor are registered for OS autostart. Stop with `python service.py stop-adapter` / `stop-backend`. When settings change, stop and retain/rename the old container before recreating it: the service refuses silent configuration replacement.
+Optionally run `python scripts/monitor.py` in another terminal with the same JEV_IMAGE. It stops matching managed GPU containers when host memory falls below the configured reserve; it is not an all-allocation OOM guarantee. Neither services nor monitor are registered for OS autostart. Stop with `python scripts/service.py stop-adapter` / `stop-backend`. When settings change, stop and retain/rename the old container before recreating it: the service refuses silent configuration replacement.
 
 ## Three decision types
 
 ```sh
-python client.py decide --question 'Does water contain hydrogen?' --format text
-python client.py decide --question 'Capital of Japan?' --choices Tokyo Osaka Kyoto --format text
-python client.py decide --request examples/three-types.json
+python -m jev.client decide --question 'Does water contain hydrogen?' --format text
+python -m jev.client decide --question 'Capital of Japan?' --choices Tokyo Osaka Kyoto --format text
+python -m jev.client decide --request examples/three-types.json
 ```
 
 | Type | Request | Meaning |
@@ -95,7 +112,7 @@ For inline JSON use `--request-json '…'` or UTF-8 stdin with `--request-json -
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 @'
 {"questions":{"answer":{"type":"noul","instructions":"Does water contain hydrogen?"}}}
-'@ | python -X utf8 client.py decide --request-json - --format text
+'@ | python -X utf8 -m jev.client decide --request-json - --format text
 ```
 
 ## Remote clients
@@ -103,10 +120,10 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 Clone the source on the client too. Use your SSH alias and the **actual server checkout path**:
 
 ```sh
-python client.py --ssh-config /path/to/ssh_config --ssh-host spark --remote-root /opt/GenericJevMCP decide --question 'Capital of Japan?' --choices Tokyo Osaka Kyoto
+python -m jev.client --ssh-config /path/to/ssh_config --ssh-host spark --remote-root /opt/GenericJevMCP decide --question 'Capital of Japan?' --choices Tokyo Osaka Kyoto
 ```
 
-Alternatively set JEV_SSH_CONFIG, JEV_SSH_HOST, JEV_REMOTE_ROOT, or put ssh_config, ssh_host, remote_root in an ignored client-config.json beside client.py. CLI flags override environment variables, which override the file. Without an SSH config, calls are local. API keys remain on the server.
+Alternatively set JEV_SSH_CONFIG, JEV_SSH_HOST, JEV_REMOTE_ROOT, or put ssh_config, ssh_host, remote_root in an ignored client-config.json in the repository root. CLI flags override environment variables, which override the file. Without an SSH config, calls are local. API keys remain on the server.
 
 ## MCP setup
 
@@ -148,14 +165,14 @@ Probabilities are **uncalibrated and normalized within the supplied candidates**
 
 With sources_only:true, an extra evidence-sufficiency decision nulls unsupported answers. That gate is itself a model judgment. Explicit retrieval with no match abstains without inference.
 
-[calibration.py](calibration.py) fits temperature on labeled examples and evaluates accuracy, NLL and ECE on **disjoint context groups**:
+[jev/calibration.py](jev/calibration.py) fits temperature on labeled examples and evaluates accuracy, NLL and ECE on **disjoint context groups**:
 
 ```json
 [{"group":"document-001","probabilities":[0.9,0.1],"correct":0}]
 ```
 
 ```sh
-python calibration.py --fit records/fit.json --evaluate records/evaluation.json
+python -m jev.calibration --fit records/fit.json --evaluate records/evaluation.json
 ```
 
 Use deployment-matched model, prompt, candidate order, mode and samples. Questions from one source share a group; overlapping fit/evaluation groups are rejected. Do not invent probabilities for abstentions. The upstream-derived grid is 0.2–4.0 in 0.05 steps; improvement on held-out data must be measured.
@@ -207,7 +224,7 @@ Co-residency with a separate Gemma 26B NVFP4 backend and mixed generation/decisi
 
 ## Retrieval, modes, and HTTP
 
-The generic path needs no corpus. corpus.py is a **site-specific HTTrack importer**, not a universal document importer. No source archive is distributed. An optional corpus/surei.jsonl can contain your own entries with id, title and text plus optional provenance. Query retrieval uses Japanese character-bigram BM25; number lookup retains the original 1–91 convention. Restart the adapter after corpus changes.
+The generic path needs no corpus. jev/corpus.py is a **site-specific HTTrack importer**, not a universal document importer. No source archive is distributed. An optional corpus/surei.jsonl can contain your own entries with id, title and text plus optional provenance. Query retrieval uses Japanese character-bigram BM25; number lookup retains the original 1–91 convention. Restart the adapter after corpus changes.
 
 POST /v1/systemone on loopback port 8011 requires Bearer authentication. The /v1/chat/completions wrapper accepts two messages: system = schema JSON, user = state JSON. Free-form generation uses port 8010. Use SSH forwarding for remote HTTP access.
 
@@ -224,7 +241,7 @@ npm ci
 npm test
 ```
 
-Runtime overlay checks run during Docker build. Live scripts verify_stack.py and verify_rag.py retain companion-model/private-corpus assumptions; they are not fresh-install acceptance tests. CPU tests and generic examples need no private corpus. See [validation](docs/validation.md) for the actual published verification scope.
+Runtime overlay checks run during Docker build. Live scripts tests/live/verify_stack.py and tests/live/verify_rag.py retain companion-model/private-corpus assumptions; they are not fresh-install acceptance tests. CPU tests and generic examples need no private corpus. See [validation](docs/validation.md) for the actual published verification scope.
 
 
 With a running configured GPU service, `npm run smoke` exercises MCP initialize, tool discovery and all three decision types. It does not start the GPU backend.

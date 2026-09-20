@@ -3,14 +3,14 @@ import {spawn} from 'node:child_process';
 import {Server} from '@modelcontextprotocol/sdk/server/index.js';
 import {StdioServerTransport} from '@modelcontextprotocol/sdk/server/stdio.js';
 import {ListToolsRequestSchema,CallToolRequestSchema} from '@modelcontextprotocol/sdk/types.js';
-const client=fileURLToPath(new URL('../client.py',import.meta.url));
+const root=fileURLToPath(new URL('../',import.meta.url));
 
 export function invocation(input) {
   if (!input || typeof input!=='object' || Array.isArray(input) ||
       Object.keys(input).some(k=>!['request','image','state_files'].includes(k)) ||
       !input.request || typeof input.request!=='object' || Array.isArray(input.request))
     throw new Error('request must be a Jev JSON object');
-  const args=['-X','utf8',client,'decide','--request-json','-','--format','text'];
+  const args=['-X','utf8','-m','jev.client','decide','--request-json','-','--format','text'];
   if(input.image!==undefined) {
     if(typeof input.image!=='string' || !input.image) throw new Error('image must be a file path');
     args.push('--image',input.image);
@@ -25,7 +25,7 @@ export function invocation(input) {
 export function decide(input,signal) {
   const {args,stdin}=invocation(input);
   return new Promise((resolve,reject)=>{
-    const child=spawn(process.env.JEV_PYTHON || 'python',args,{windowsHide:true,shell:false,signal});
+    const child=spawn(process.env.JEV_PYTHON || 'python',args,{cwd:root,windowsHide:true,shell:false,signal});
     let output='',errors='';
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
     child.stdout.on('data',s=>output+=s); child.stderr.on('data',s=>errors+=s);

@@ -16,6 +16,23 @@ MCPホスト／ターミナル → Pythonクライアント → 任意のSSH →
 
 モデル知識を既定で使い、文章・UTF-8ファイル・画像1枚を追加できます。複数問をまとめて読むjointと、独立した入力で順次読むseparateを選べます。通常生成と判定は同じ重みを共有し、判定は1 readにつきdiffusion 1 step、通常生成は設定されたdenoising scheduleを使います。
 
+## ディレクトリ構成
+
+```text
+.
+├── jev/             Python本体・API・CLI・校正
+├── mcp/             MCP stdioサーバー
+├── scripts/         モデル準備・起動停止・監視
+├── tests/           CPU・MCPテスト
+│   └── live/        稼働中GPUに対する任意の実機検証
+├── runtime/         固定vLLM差分・ビルド時検査
+├── examples/        要求サンプル
+├── skills/          アシスタント用スキル
+└── docs/            検証範囲
+```
+
+Pythonの入口はリポジトリルートから `python -m jev.client`、`python -m jev.calibration`、`python scripts/service.py` で実行します。MCPはPythonの作業ディレクトリを自動でルートへ設定します。非追跡の `.env`・`client-config.json`・`state/`・`corpus/` の場所はルートのままです。
+
 ## 必要環境
 
 | 要素 | 必要環境・検証範囲 |
@@ -40,32 +57,32 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
 
-python prepare_model.py --download
+python scripts/prepare_model.py --download
 # 取得済みの場合：
-# python prepare_model.py --snapshot /absolute/cache/path/snapshots/REVISION
-python service.py init --download-status state/download-status.json
+# python scripts/prepare_model.py --snapshot /absolute/cache/path/snapshots/REVISION
+python scripts/service.py init --download-status state/download-status.json
 
 docker build -t generic-jev:local .
 export JEV_IMAGE=$(docker image inspect generic-jev:local --format '{{.Id}}')
-python service.py start-backend
+python scripts/service.py start-backend
 # readyになるまで待つ。初回コンパイルはwarm時より時間がかかる。
 curl --fail http://127.0.0.1:8010/health
-python service.py start-adapter
+python scripts/service.py start-adapter
 curl --fail http://127.0.0.1:8011/health
 ```
 
-prepare_model.pyは固定revisionを ~/.cache/huggingface に取得し、ファイル名・サイズを照合します。initは0600の権限でローカル認証情報を生成し、既存.envを上書きしません。コーパスなしで起動できます。
+scripts/prepare_model.pyは固定revisionを ~/.cache/huggingface に取得し、ファイル名・サイズを照合します。initは0600の権限でローカル認証情報を生成し、既存.envを上書きしません。コーパスなしで起動できます。
 
 **JEV_IMAGEには自分でビルドしたイメージIDを設定**し、サービス操作・監視で同じ値を使います。ソース内の既定IDは開発時に検証したイメージであり、導入先に存在するとは限りません。ビルド時にbaseとoverlayのhashを照合します。
 
-任意の監視は、同じJEV_IMAGEを設定した別ターミナルで `python monitor.py`。hostの空きメモリが予約値を下回ると、条件の一致する管理対象GPUコンテナを停止します。あらゆるOOMを防ぐ保証ではありません。サービスと監視のOS自動起動は設定しません。停止は `python service.py stop-adapter`／`stop-backend`。構成を変える場合は旧コンテナを停止・保存用にrenameしてから再作成します。設定が異なる既存コンテナの黙った再利用は拒否します。
+任意の監視は、同じJEV_IMAGEを設定した別ターミナルで `python scripts/monitor.py`。hostの空きメモリが予約値を下回ると、条件の一致する管理対象GPUコンテナを停止します。あらゆるOOMを防ぐ保証ではありません。サービスと監視のOS自動起動は設定しません。停止は `python scripts/service.py stop-adapter`／`stop-backend`。構成を変える場合は旧コンテナを停止・保存用にrenameしてから再作成します。設定が異なる既存コンテナの黙った再利用は拒否します。
 
 ## yes/no・choice・scoreの3型
 
 ```sh
-python client.py decide --question '水には水素が含まれますか' --format text
-python client.py decide --question '日本の首都はどれですか' --choices 東京 大阪 京都 --format text
-python client.py decide --request examples/three-types.json
+python -m jev.client decide --question '水には水素が含まれますか' --format text
+python -m jev.client decide --question '日本の首都はどれですか' --choices 東京 大阪 京都 --format text
+python -m jev.client decide --request examples/three-types.json
 ```
 
 | 型 | 要求 | 戻り値の意味 |
@@ -95,7 +112,7 @@ JSONは `--request-json '…'` またはUTF-8標準入力の `--request-json -` 
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 @'
 {"questions":{"answer":{"type":"noul","instructions":"水には水素が含まれますか"}}}
-'@ | python -X utf8 client.py decide --request-json - --format text
+'@ | python -X utf8 -m jev.client decide --request-json - --format text
 ```
 
 ## 別のPCから呼ぶ
@@ -103,10 +120,10 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 クライアント側にもcloneし、自分のSSH設定・ホスト名・**サーバー上の実際のcheckoutパス**を指定します。
 
 ```sh
-python client.py --ssh-config /path/to/ssh_config --ssh-host spark --remote-root /opt/GenericJevMCP decide --question '日本の首都は？' --choices 東京 大阪 京都
+python -m jev.client --ssh-config /path/to/ssh_config --ssh-host spark --remote-root /opt/GenericJevMCP decide --question '日本の首都は？' --choices 東京 大阪 京都
 ```
 
-JEV_SSH_CONFIG、JEV_SSH_HOST、JEV_REMOTE_ROOTの環境変数、またはclient.pyと同じ場所の非追跡client-config.jsonにssh_config／ssh_host／remote_rootを置く方法もあります。優先順位はCLI引数→環境変数→設定ファイル。SSH設定がなければローカル呼び出しです。APIキーはサーバー側に残ります。
+JEV_SSH_CONFIG、JEV_SSH_HOST、JEV_REMOTE_ROOTの環境変数、またはリポジトリルートの非追跡client-config.jsonにssh_config／ssh_host／remote_rootを置く方法もあります。優先順位はCLI引数→環境変数→設定ファイル。SSH設定がなければローカル呼び出しです。APIキーはサーバー側に残ります。
 
 ## MCPの設定
 
@@ -148,14 +165,14 @@ AntigravityではMCPを登録し、[skills/jev](skills/jev)を ~/.gemini/antigra
 
 sources_only:trueでは根拠十分性の追加判定を行い、不足時は回答をnullにします。このゲート自体もモデル判断です。検索を明示して一致がなかった場合は推論せず保留します。
 
-[calibration.py](calibration.py)は正解付きデータで温度をfitし、**文脈グループを分離した評価データ**でaccuracy・NLL・ECEを比較します。
+[jev/calibration.py](jev/calibration.py)は正解付きデータで温度をfitし、**文脈グループを分離した評価データ**でaccuracy・NLL・ECEを比較します。
 
 ```json
 [{"group":"document-001","probabilities":[0.9,0.1],"correct":0}]
 ```
 
 ```sh
-python calibration.py --fit records/fit.json --evaluate records/evaluation.json
+python -m jev.calibration --fit records/fit.json --evaluate records/evaluation.json
 ```
 
 本番とモデル・質問文・候補順・mode・samplesを揃え、同じ資料からの質問は同じgroupにします。fit／評価のgroup重複は拒否します。保留を架空の確率へ置き換えません。温度探索は上流由来の0.2〜4.0、0.05刻み。別データでの改善は実測して判断します。
@@ -207,7 +224,7 @@ MCP例のアシスタントターン全体は8.472秒でした。いずれも単
 
 ## 検索・mode・HTTP
 
-汎用判定にはコーパス不要です。corpus.pyは**特定サイト向けHTTrack importer**であり、汎用文書取込器ではありません。原本資料は配布しません。任意のcorpus/surei.jsonlにはid・title・textと任意の出典情報を持つ自分のレコードを置けます。query検索は日本語文字bigramのBM25、number検索は開発時の1〜91直接参照の規約です。変更時はadapterを再起動します。
+汎用判定にはコーパス不要です。jev/corpus.pyは**特定サイト向けHTTrack importer**であり、汎用文書取込器ではありません。原本資料は配布しません。任意のcorpus/surei.jsonlにはid・title・textと任意の出典情報を持つ自分のレコードを置けます。query検索は日本語文字bigramのBM25、number検索は開発時の1〜91直接参照の規約です。変更時はadapterを再起動します。
 
 loopback 8011のPOST /v1/systemoneはBearer認証が必要です。互換の/v1/chat/completionsはsystemにschema JSON、userにstate JSONの2メッセージ形式。自由生成は8010を使います。遠隔HTTP接続はSSH転送を使います。
 
@@ -224,7 +241,7 @@ npm ci
 npm test
 ```
 
-Docker build中にもruntime overlay検査を行います。実機用verify_stack.py／verify_rag.pyには開発時の同居モデル・非公開コーパスの前提が残るため、新規導入の受入試験ではありません。CPUテストと汎用サンプルに非公開コーパスは不要です。公開時に実際に確認した範囲は[検証文書](docs/validation.md)を参照してください。
+Docker build中にもruntime overlay検査を行います。実機用tests/live/verify_stack.py／tests/live/verify_rag.pyには開発時の同居モデル・非公開コーパスの前提が残るため、新規導入の受入試験ではありません。CPUテストと汎用サンプルに非公開コーパスは不要です。公開時に実際に確認した範囲は[検証文書](docs/validation.md)を参照してください。
 
 
 設定済みGPUサービスが稼働中なら `npm run smoke` でMCP接続・ツール一覧・3型の判定を実走できます。GPUの起動は行いません。

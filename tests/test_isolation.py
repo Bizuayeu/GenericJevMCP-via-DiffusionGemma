@@ -1,9 +1,9 @@
 import math
 import unittest
 
-from decision import Engine, validate
-from server import execute
-from corpus import Corpus
+from jev.decision import Engine, validate
+from jev.server import execute
+from jev.corpus import Corpus
 
 
 def request(mode='separate', samples='auto'):

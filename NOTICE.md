@@ -4,7 +4,7 @@ The runtime/overlay files are Apache-2.0 vLLM sources from mmastrac/vllm 6591b09
 
 The mixed-logprob concatenation fix adapts razorback16/vllm commit 9bbf7418e85020dc76da9f60cdfe6c4e912ec048 (Apache-2.0). The pinned-base overlay approach and Dynamo limit follow mmastrac/djev-spark 4405eef82b7be1fa832a35cb7f87d1f5c3f86c8d. The device cap is independently implemented using PyTorch.
 
-The separate-question execution design and calibration.py are adapted from
+The separate-question execution design and jev/calibration.py are adapted from
 ikermoel/open-alternative-jev commit 98774715d1b05c5310df820c8727054787caaf20
 (https://github.com/ikermoel/open-alternative-jev, Apache-2.0).
 The upstream license is retained in licenses/open-alternative-jev.txt.

@@ -2,8 +2,8 @@ import math
 import os
 import unittest
 from pathlib import Path
-from decision import distribution, validate, template_for, aggregate
-from corpus import extract_page, split_chunks, Corpus
+from jev.decision import distribution, validate, template_for, aggregate
+from jev.corpus import extract_page, split_chunks, Corpus
 
 class DecisionTests(unittest.TestCase):
     def test_ambiguous_labels_have_normalized_entropy(self):

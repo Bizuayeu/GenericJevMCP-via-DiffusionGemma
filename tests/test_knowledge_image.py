@@ -2,10 +2,10 @@ import base64
 import json
 import unittest
 from unittest.mock import patch
-from decision import Engine, validate
-from media import encode_image, validate_image, MAX_IMAGE_BYTES
-from server import execute
-from corpus import Corpus
+from jev.decision import Engine, validate
+from jev.media import encode_image, validate_image, MAX_IMAGE_BYTES
+from jev.server import execute
+from jev.corpus import Corpus
 
 PNG = 'data:image/png;base64,' + base64.b64encode(b'\x89PNG\r\n\x1a\n' + b'fixture').decode()
 
@@ -41,9 +41,9 @@ class KnowledgeImageTests(unittest.TestCase):
         engine = Engine(Encoder(), 'http://unused', 'unused')
         value = {'choices':[{'logprobs':{'content':[{'top_logprobs':[
             {'token':'token_id:1','logprob':-.1}, {'token':'token_id:2','logprob':-3.}]}]}}]}
-        with patch('decision.template_for',return_value=([1],[{'pos':0,'ids':[1,2]}])), \
-             patch('decision.urlopen',return_value=Response()) as call, \
-             patch('decision.json.load',return_value=value):
+        with patch('jev.decision.template_for',return_value=([1],[{'pos':0,'ids':[1,2]}])), \
+             patch('jev.decision.urlopen',return_value=Response()) as call, \
+             patch('jev.decision.json.load',return_value=value):
             engine.read(q, '', 42, image=PNG)
         payload=json.loads(call.call_args.args[0].data)
         content=payload['messages'][1]['content']

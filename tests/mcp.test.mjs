@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
-import {invocation} from './server.mjs';
+import {invocation} from '../mcp/server.mjs';
 test('question and shell metacharacters stay in JSON stdin',()=>{
  const request={questions:{q:{type:'noul',instructions:'魏延？; $(echo injected)'}}};
  const value=invocation({request,image:'a & b.png',state_files:['日本語.md']});
