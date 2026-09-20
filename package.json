@@ -1,0 +1,17 @@
+{
+  "name": "generic-jev-mcp-via-diffusiongemma",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test mcp/*.test.mjs",
+    "start": "node mcp/server.mjs",
+    "smoke": "node mcp/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0"
+  }
+}

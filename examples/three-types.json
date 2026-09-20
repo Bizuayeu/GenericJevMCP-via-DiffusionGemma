@@ -1,0 +1,28 @@
+{
+  "state": "The package contains three red balls.",
+  "samples": 1,
+  "questions": {
+    "contains_red": {
+      "type": "noul",
+      "instructions": "Does the package contain a red ball?"
+    },
+    "color": {
+      "type": "choice",
+      "instructions": "What color are the balls?",
+      "criteria": {
+        "red": null,
+        "blue": null,
+        "green": null
+      }
+    },
+    "explicitness": {
+      "type": "score",
+      "instructions": "How explicitly does the text state the color?",
+      "criteria": [
+        "not stated",
+        "implied",
+        "explicitly stated"
+      ]
+    }
+  }
+}

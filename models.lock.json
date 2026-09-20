@@ -1,0 +1,64 @@
+{
+  "diffusion": {
+    "model": "nvidia/diffusiongemma-26B-A4B-it-NVFP4",
+    "revision": "ec4ff3df205028f4e81c954c2227f9312b3ec2ea",
+    "files": [
+      {
+        "path": ".gitattributes",
+        "bytes": 1570
+      },
+      {
+        "path": ".quant_summary.txt",
+        "bytes": 3700121
+      },
+      {
+        "path": "README.md",
+        "bytes": 9993
+      },
+      {
+        "path": "apache_2.0_license.md",
+        "bytes": 11433
+      },
+      {
+        "path": "chat_template.jinja",
+        "bytes": 17336
+      },
+      {
+        "path": "config.json",
+        "bytes": 5185
+      },
+      {
+        "path": "generation_config.json",
+        "bytes": 357
+      },
+      {
+        "path": "hf_quant_config.json",
+        "bytes": 463
+      },
+      {
+        "path": "model-00001-of-00002.safetensors",
+        "bytes": 10002097536
+      },
+      {
+        "path": "model-00002-of-00002.safetensors",
+        "bytes": 8821758352
+      },
+      {
+        "path": "model.safetensors.index.json",
+        "bytes": 4656360
+      },
+      {
+        "path": "processor_config.json",
+        "bytes": 1689
+      },
+      {
+        "path": "tokenizer.json",
+        "bytes": 32169626
+      },
+      {
+        "path": "tokenizer_config.json",
+        "bytes": 2741
+      }
+    ]
+  }
+}

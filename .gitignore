@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+state/
+records/
+corpus/
+.venv/
+__pycache__/
+*.pyc
+upstream/
+/docs/IMPLEMENTATION_PLAN.md
+tests/tokenizer.json
+node_modules/
+client-config.json

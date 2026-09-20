@@ -1,0 +1,43 @@
+{
+  "base_commit": "dee37d89115db4c94a820a79a78a7828e141c910",
+  "fork_commit": "6591b093b29536dd070c6af3628b734025c53e23",
+  "base_image": "vllm/vllm-openai@sha256:dea7fa047caa114167efccdeb42321b12d2c11da1add8728aa2662cb8d6b8cd5",
+  "files": {
+    "vllm/config/scheduler.py": {
+      "base_sha256": "5abf1ac20162da595c2551eb6be8be7f1004d823df2b5a7fdbdfac49702d7551",
+      "fork_sha256": "740ba6831d4372290ebed8a417b5ec1fa31c595ba9ac4270a9fd8eecf449157a"
+    },
+    "vllm/config/vllm.py": {
+      "base_sha256": "89a358fc9408f7fd2be3fa20c07e6266a85712f08fef2b0d52650bf623963b2f",
+      "fork_sha256": "d8399f91f2955067f765b550b503b76e7dfc3534657ab481c8bcd2f43fbaf114"
+    },
+    "vllm/model_executor/models/diffusion_gemma.py": {
+      "base_sha256": "59b89b6da7d4f1df062bbf26b1041a4e93c9723f0c37604011eab81e4272c236",
+      "fork_sha256": "17140728a2c84db4698ad640467671d76a1679169f12178a342d16d163c0d46f"
+    },
+    "vllm/sampling_params.py": {
+      "base_sha256": "792e2c6d57eb1ffa32cb18faaf22b3877d84b7d57330a58d95561719b97dc22e",
+      "fork_sha256": "3fcc875a1c6de57994f124a4e2037f425408e5de6cdc9fc4a617941a03c328e9"
+    },
+    "vllm/v1/core/sched/diffusion_scheduler.py": {
+      "base_sha256": null,
+      "fork_sha256": "e858f3ef5e2fb9198d28c14c9436a8454796af1c01a310e0eb9db36f6969be64"
+    },
+    "vllm/v1/engine/input_processor.py": {
+      "base_sha256": "7fa4016341b8ad99a4cec7218e5ecd4e4a2bbcdd8d3fa7536ea24a6c99805060",
+      "fork_sha256": "01177aa1dd08315034b39f580d2657fe371fd9c83d15404dca6121631dd3245c"
+    },
+    "vllm/v1/worker/gpu/model_runner.py": {
+      "base_sha256": "670433ce2ea19f271be7a1c83c7481922fe0dae9ecfec0b94183caa06ac4f442",
+      "fork_sha256": "4d4712eb76c005a6e479eee36544edc3d682d7bc915f3c20ff9db6169e3a4c0b"
+    },
+    "vllm/v1/worker/gpu/model_states/interface.py": {
+      "base_sha256": "5675b6fedc7403a9ab410b1e5565974e78fac23c42ab4253ae1da52d6e09b594",
+      "fork_sha256": "66956d85d696efbce26b4b1aa8d9523ec6b6c88d0ace5b635cd9ba70827e5939"
+    },
+    "vllm/v1/worker/gpu/spec_decode/utils.py": {
+      "base_sha256": "282f2929eddae9ca7312269f799be07472334b6df9fd91878b5e839ec05e418c",
+      "fork_sha256": "878dbd7a81c5ebb807ae9c09b9a4323d0cd7a8ed49e301cb9a6b7dd64c2b4921"
+    }
+  }
+}
