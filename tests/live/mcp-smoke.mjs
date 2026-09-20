@@ -26,6 +26,10 @@ try {
   assert.match(output,/red:/);
   assert.match(output,/color:/);
   assert.match(output,/explicitness:/);
-  assert.match(output,/所要時間:/);
+  assert.match(output,/所要時間（全体）:/);
+  assert.equal(output,'```text\n'+result.structuredContent.display+'\n```');
+  assert.equal(typeof result.structuredContent.timing.total_seconds,'number');
+  assert.equal(typeof result.structuredContent.timing.decision_seconds,'number');
+  assert.match(output,/判定時間:/);
   console.log(output);
 } finally {await client.close();}

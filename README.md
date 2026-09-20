@@ -181,6 +181,8 @@ Use deployment-matched model, prompt, candidate order, mode and samples. Questio
 
 ## Latency breakdown
 
+The client and MCP now return `timing.total_seconds` and `timing.decision_seconds` as separate numeric fields (decision time is null when unmeasured), plus a canonical `display` string. The original elapsed fields remain for compatibility. MCP declares an outputSchema and returns structuredContent; its text content wraps that display in a text code block. The skill relays that display verbatim in a text code block. Arbitrary host models can still rewrite a final response; the tool result itself is deterministic in format.
+
 | Field / measurement | What it includes |
 |---|---|
 | Client elapsed_seconds | Client main entry through argument/file processing and API/SSH response receipt; excludes interpreter/import startup and final rendering |

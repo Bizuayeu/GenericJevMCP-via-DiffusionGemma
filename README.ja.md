@@ -181,6 +181,8 @@ python -m jev.calibration --fit records/fit.json --evaluate records/evaluation.j
 
 ## レイテンシの内訳
 
+クライアントとMCPは `timing.total_seconds`（全体）と `timing.decision_seconds`（判定）を別の数値項目として返し、未計測の判定時間はnullにします。既存のelapsed項目は互換性のため保持します。固定表示用の `display` も返し、MCPはoutputSchemaとstructuredContentを公開します。text内容はdisplayをtextコードブロックで包んだもので、スキルはtextコードブロックで逐語提示します。任意の呼出し元モデルによる最終回答の書き換えまでは強制できませんが、ツール結果の形式はコードで固定しています。
+
 | 項目 | 測定範囲 |
 |---|---|
 | クライアントJSONのelapsed_seconds | main開始から引数・ファイル処理、API／SSH応答受信まで。Python起動・import・最終表示整形は含まない |

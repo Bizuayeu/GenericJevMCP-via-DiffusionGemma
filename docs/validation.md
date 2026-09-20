@@ -77,3 +77,7 @@ Clean exported checkout: Python CPU suite 46/46 passed using the declared depend
 Python modules are under jev/, operational scripts under scripts/, and live probes under tests/live/. Python CPU checks: 48 passed; MCP boundary tests: 2 passed. The standalone MCP smoke probe was launched from outside the checkout and returned all three types through the new remote module command (client 1.235 s / decision 0.086 s). The existing GPU services were not restarted. Container command construction is covered by a CPU test; a fresh Docker deployment was not repeated.
 
 設定・データのルート位置を保持し、MCP側が作業ディレクトリを指定する。クライアントとSSH受信側は同じ配置版を使う。稼働済みサービスの全体再配備とは区別する。
+
+## Structured result presentation / 結果表示の構造化
+
+The client supplies timing.total_seconds, timing.decision_seconds (null if unmeasured), and canonical display. MCP publishes outputSchema and structuredContent, with the display in a text code block. A complexity-named question is covered separately from both timing labels. CPU tests: 49 passed; MCP boundary/result tests: 3 passed. In a real gemma-nvfp4 headless /jev call, the final reply relayed only the block, preserving separate total 1.302 s and decision 0.097 s lines. This observed host behavior is not a guarantee against rewriting by arbitrary calling models.

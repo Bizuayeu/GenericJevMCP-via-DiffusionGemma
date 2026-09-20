@@ -14,7 +14,7 @@ from jev import client
 class ClientTests(unittest.TestCase):
     def call(self, args):
         with patch.object(sys, 'argv', ['client.py', '--ssh-config', 'ssh_config', *args]), \
-                patch('jev.client.subprocess.run', return_value=subprocess.CompletedProcess([], 0, b'{}', b'')) as run, \
+                patch('jev.client.subprocess.run', return_value=subprocess.CompletedProcess([], 0, b'{"answers":{}}', b'')) as run, \
                 contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             client.main()
             return json.loads(run.call_args.kwargs['input'])
@@ -65,7 +65,7 @@ class ClientTests(unittest.TestCase):
             (root/'client-config.json').write_text(json.dumps({'ssh_config':'my-config','ssh_host':'my-spark','remote_root':'/opt/jev'}),encoding='utf-8')
             with patch.object(client,'ROOT',root), \
                  patch.object(sys,'argv',['client.py','decide','--question','q']), \
-                 patch('jev.client.subprocess.run',return_value=subprocess.CompletedProcess([],0,b'{}',b'')) as run, \
+                 patch('jev.client.subprocess.run',return_value=subprocess.CompletedProcess([],0,b'{"answers":{}}',b'')) as run, \
                  contextlib.redirect_stdout(io.StringIO()):
                 client.main()
             self.assertEqual(run.call_args.args[0][1:3],['-F','my-config'])
@@ -118,6 +118,8 @@ class ClientTests(unittest.TestCase):
                 value=json.loads(output.getvalue())
                 self.assertEqual(value['elapsed_seconds'],2.5)
                 self.assertEqual(value['diagnostics']['elapsed_seconds'],0.25)
+                self.assertEqual(value['timing'],{'total_seconds':2.5,'decision_seconds':.25})
+                self.assertIn('判定時間: 0.250 秒',value['display'])
 
     def test_text_rendering_preserves_decisions_and_abstention(self):
         result={'answers': {
@@ -151,9 +153,20 @@ class ClientTests(unittest.TestCase):
                 client.main()
             self.assertIn(str(path.resolve()),output.getvalue())
             self.assertIn('保留',output.getvalue())
-            self.assertIn('所要時間:',output.getvalue())
+            self.assertIn('所要時間（全体）:',output.getvalue())
 
     def test_request_from_stdin_preserves_quotes_and_unicode(self):
         body={'questions':{'q':{'type':'noul','instructions':'「赤」ですか'}}}
         with patch.object(sys,'stdin',io.StringIO(json.dumps(body,ensure_ascii=False))):
             self.assertEqual(self.call(['decide','--request-json','-'])['body'],body)
+
+    def test_timing_has_distinct_labels_even_with_complexity_question(self):
+        value={'answers':{'complexity':{'type':'score','score':.106,
+               'legend':{'0':'low','1':'high'},'probabilities':{'0':.894,'1':.106}}},
+               'elapsed_seconds':.882,'diagnostics':{'elapsed_seconds':.106}}
+        display=client.render_decision(value)
+        self.assertIn('所要時間（全体）: 0.882 秒',display)
+        self.assertIn('判定時間: 0.106 秒',display)
+        self.assertIn('complexity: 0.106',display)
+        value['diagnostics']={'reads':0}
+        self.assertIn('判定時間: 未計測',client.render_decision(value))

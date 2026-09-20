@@ -49,10 +49,12 @@ def render_decision(value):
         lines.append('参照: '+source.get('source_url',source.get('title',source.get('id',''))))
     for source in value.get('input_sources',[]):
         lines.append('参照: '+source)
-    lines.append(f"所要時間: {value['elapsed_seconds']:.3f} 秒（入力処理・通信を含む）")
+    lines.append(f"所要時間（全体）: {value['elapsed_seconds']:.3f} 秒")
     inference=value.get('diagnostics',{}).get('elapsed_seconds')
     if inference is not None:
-        lines.append(f'判定処理: {inference:.3f} 秒')
+        lines.append(f'判定時間: {inference:.3f} 秒')
+    else:
+        lines.append('判定時間: 未計測')
     return '\n'.join(lines)
 
 def main():
@@ -162,8 +164,11 @@ def main():
         value['elapsed_seconds']=time.monotonic()-start
         if a.state_file:
             value['input_sources']=[str(path.resolve()) for path in a.state_file]
+        value['timing']={'total_seconds':value['elapsed_seconds'],
+                         'decision_seconds':value.get('diagnostics',{}).get('elapsed_seconds')}
+        value['display']=render_decision(value)
         if a.format=='text':
-            print(render_decision(value))
+            print(value['display'])
             return
     print(json.dumps(value,ensure_ascii=False,indent=2))
 
